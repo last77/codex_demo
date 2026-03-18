@@ -10,6 +10,7 @@ dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+const HOST = process.env.HOST || "0.0.0.0";
 
 app.use(cors());
 app.use(express.json());
@@ -246,7 +247,6 @@ app.delete("/api/cart/items/:itemId", async (req, res, next) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`backend running at http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`backend running at http://${HOST}:${PORT}`);
 });
-
