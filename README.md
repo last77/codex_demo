@@ -1,11 +1,10 @@
 # 简易 PC 商城（Vue3 + Express + MySQL）
 
-本项目是一个前后端分离的最小商城示例，包含两个页面：
-
+本项目是一个前后端分离示例，包含：
 - 商品列表页
 - 购物车页（固定用户 `user_id=1`）
 
-数据来自 MySQL，购物车支持增减删和总价计算。
+数据来源为 MySQL，购物车支持增删改查和总价计算。
 
 ## 目录结构
 
@@ -13,34 +12,41 @@
 .
 ├─ backend              # Node.js + Express + mysql2
 ├─ frontend             # Vue3 + Vite + Pinia + Vue Router
-├─ mysql-local          # 本地免安装 MySQL（ZIP 解压版）
 └─ sql
-   └─ init.sql          # 建表与种子数据
+   └─ init.sql          # 建表和种子数据
 ```
+
+## 数据库位置（系统目录）
+
+当前已迁移到仓库外目录：
+
+- MySQL 程序目录：`D:\mysql-system\mysql-9.6.0-winx64`
+- MySQL 数据目录：`D:\mysql-system\data`
+- MySQL 配置文件：`D:\mysql-system\my.ini`
+
+说明：数据库已不依赖项目目录下的 `mysql-local`。
 
 ## 1) 初始化数据库
 
-如果你已安装系统 MySQL，可在项目根目录执行：
-
-```bash
-mysql -u root -p < sql/init.sql
+```powershell
+cmd /c "\"D:\mysql-system\mysql-9.6.0-winx64\bin\mysql.exe\" --default-character-set=utf8mb4 --protocol=TCP -h 127.0.0.1 -P 3306 -u root -p123456 < \"D:\flutter demo\test_codex\sql\init.sql\""
 ```
 
-如果你使用本项目的本地 MySQL（`mysql-local`），可执行：
+## 2) 启动服务（数据库 + 后端 + 前端）
+
+### 2.1 启动 MySQL
 
 ```powershell
-& cmd.exe /c '"D:\flutter demo\test_codex\mysql-local\mysql-9.6.0-winx64\bin\mysql.exe" --default-character-set=utf8mb4 -h 127.0.0.1 -P 3306 -u root -p123456 < "D:\flutter demo\test_codex\sql\init.sql"'
+Start-Process -FilePath "D:\mysql-system\mysql-9.6.0-winx64\bin\mysqld.exe" -ArgumentList "--defaults-file=D:\mysql-system\my.ini"
 ```
 
-## 2) 开启服务（前后端 + 数据库）
-
-### 2.1 开启 MySQL（本地 ZIP 版）
+可用下面命令确认 3306 端口已监听：
 
 ```powershell
-node -e "const {spawn}=require('child_process'); const exe='D:\\flutter demo\\test_codex\\mysql-local\\mysql-9.6.0-winx64\\bin\\mysqld.exe'; const args=['--defaults-file=D:\\flutter demo\\test_codex\\mysql-local\\my.ini']; const p=spawn(exe,args,{detached:true,stdio:'ignore'}); p.unref(); console.log('mysql started');"
+netstat -ano | Select-String ":3306" | Select-String "LISTENING"
 ```
 
-### 2.2 开启后端
+### 2.2 启动后端
 
 ```powershell
 cd "D:\flutter demo\test_codex\backend"
@@ -49,9 +55,9 @@ npm.cmd install
 npm.cmd run dev
 ```
 
-默认端口：`3000`
+默认地址：`http://localhost:3000`
 
-### 2.3 开启前端
+### 2.3 启动前端
 
 ```powershell
 cd "D:\flutter demo\test_codex\frontend"
@@ -59,9 +65,9 @@ npm.cmd install
 npm.cmd run dev -- --port 5174
 ```
 
-默认访问地址：`http://localhost:5174/products`
+默认地址：`http://localhost:5174/products`
 
-## 3) 关闭服务（前后端 + 数据库）
+## 3) 关闭服务（数据库 + 后端 + 前端）
 
 ### 3.1 按端口关闭（推荐）
 
@@ -80,43 +86,30 @@ foreach ($port in $ports) {
 }
 ```
 
-### 3.2 按已知 PID 关闭
+### 3.2 正常关闭 MySQL（推荐）
 
 ```powershell
-taskkill /PID 9896 /F    # 前端示例
-taskkill /PID 33188 /F   # 后端示例
-taskkill /PID 13820 /F   # MySQL 示例
+"D:\mysql-system\mysql-9.6.0-winx64\bin\mysqladmin.exe" --protocol=TCP -h 127.0.0.1 -P 3306 -u root -p123456 shutdown
 ```
 
-## 4) 网络访问控制（是否允许局域网访问）
+## 环境变量模板
 
-### 4.1 允许局域网访问（LAN）
+后端使用 [backend/.env.example](backend/.env.example)：
 
-- 前端：`npm.cmd run dev -- --host 0.0.0.0 --port 5174`
-- 后端：`HOST=0.0.0.0`（默认）
-- 局域网访问示例：`http://你的局域网IP:5174/products`
+```env
+PORT=3000
+HOST=0.0.0.0
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=123456
+MYSQL_DATABASE=pc_mall
+```
 
-### 4.2 仅本机访问（禁止局域网访问）
-
-- 前端：`npm.cmd run dev -- --host 127.0.0.1 --port 5174`
-- 后端：在 `backend/.env` 中设置 `HOST=127.0.0.1`
-- 仅本机访问地址：`http://localhost:5174/products`
-
-## 5) API 概览
+## API 概览
 
 - `GET /api/products`：商品列表（支持分页参数 `page`、`pageSize`）
 - `GET /api/cart?userId=1`：查询购物车
 - `POST /api/cart/items`：加入购物车
-- `PATCH /api/cart/items/:itemId`：更新购物车项数量
+- `PATCH /api/cart/items/:itemId`：更新购物车数量
 - `DELETE /api/cart/items/:itemId`：删除购物车项
-
-统一响应结构：
-
-```json
-{
-  "code": 0,
-  "message": "ok",
-  "data": {}
-}
-```
-
