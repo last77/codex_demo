@@ -34,6 +34,20 @@ cmd /c "\"D:\mysql-system\mysql-9.6.0-winx64\bin\mysql.exe\" --default-character
 
 ## 2) 启动服务（数据库 + 后端 + 前端）
 
+### 2.0 一键启动（推荐）
+
+在项目根目录执行：
+
+```powershell
+scripts\start-all.cmd
+```
+
+脚本会自动：
+- 启动 MySQL（若未运行）
+- 检查并补齐 `backend/.env`
+- 启动后端（3000）与前端（5173）
+- 输出可访问地址
+
 ### 2.1 启动 MySQL
 
 ```powershell
@@ -62,12 +76,25 @@ npm.cmd run dev
 ```powershell
 cd "D:\flutter demo\test_codex\frontend"
 npm.cmd install
-npm.cmd run dev -- --port 5174
+npm.cmd run dev -- --port 5173
 ```
 
-默认地址：`http://localhost:5174/products`
+默认地址：`http://localhost:5173/products`
 
 ## 3) 关闭服务（数据库 + 后端 + 前端）
+
+### 3.0 一键关闭（推荐）
+
+在项目根目录执行：
+
+```powershell
+scripts\stop-all.cmd
+```
+
+脚本会自动停止：
+- 前端（5173）
+- 后端（3000）
+- MySQL（优雅关闭，失败时会按端口强制结束）
 
 ### 3.1 按端口关闭（推荐）
 
